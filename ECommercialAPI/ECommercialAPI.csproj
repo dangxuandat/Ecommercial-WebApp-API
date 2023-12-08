@@ -22,6 +22,7 @@
     <ItemGroup>
       <Folder Include="Payload\Request\" />
       <Folder Include="Payload\Response\" />
+      <Folder Include="Services\" />
     </ItemGroup>
 
 </Project>
