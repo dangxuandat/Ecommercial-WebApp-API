@@ -1,10 +1,12 @@
 ﻿using ApplicationCore;
 using ECommercialAPI.Constants;
 using Infrastructure.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ECommercialAPI.Controllers;
 
+[Authorize]
 [Route("auth")]
 [ApiController]
 public class AuthController : ControllerBase

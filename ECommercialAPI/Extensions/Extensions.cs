@@ -1,12 +1,18 @@
-﻿using ApplicationCore;
+﻿using System.Text;
+using ApplicationCore;
 using ApplicationCore.Implements;
 using ECommercialAPI.Constants;
 using Infrastructure.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 namespace ECommercialAPI.Extensions;
 using Microsoft.EntityFrameworkCore;
 public static class Extensions
 {
+    private static readonly IConfiguration Configuration = new ConfigurationBuilder()
+        .AddEnvironmentVariables(EnvironmentVariableConstant.Prefix).Build();
+    
     public static IServiceCollection AddUnitOfWork(this IServiceCollection services)
     {
         services.AddDbContext<EcommercialContext>();
@@ -16,13 +22,34 @@ public static class Extensions
 
     public static IServiceCollection AddDatabase(this IServiceCollection services)
     {
-        IConfiguration configuration = new ConfigurationBuilder()
-            .AddEnvironmentVariables(EnvironmentVariableConstant.Prefix).Build();
         services.AddDbContext<EcommercialContext>(
-            options => options.UseSqlServer(CreateConnectionString(configuration)));
+            options => options.UseSqlServer(CreateConnectionString(Configuration)));
         return services;
     }
 
+    public static IServiceCollection AddJwtAuthentication(this IServiceCollection services)
+    {
+        services.AddAuthentication(x =>
+        {
+            x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            x.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+        }).AddJwtBearer(x =>
+        {
+            x.TokenValidationParameters = new TokenValidationParameters()
+            {
+                ValidIssuer = Configuration[JwtConstant.Issuer],
+                ValidAudience = Configuration[JwtConstant.Audience],
+                IssuerSigningKey =
+                    new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration[JwtConstant.SecretKey])),
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+            };
+        });
+        return services;
+    }
     private static string CreateConnectionString(IConfiguration configuration)
     {
         string connectionString =
